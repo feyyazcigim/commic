@@ -121,7 +121,7 @@ export class ConfigManager {
    */
   async promptForConfig(ui: UIManager): Promise<Config> {
     ui.showSectionHeader('🔧 Configuration Setup');
-    ui.showInfo('Get your free API key at: https://makersuite.google.com/app/apikey');
+    ui.showInfo('Get your free API key at: https://aistudio.google.com/app/api-keys');
     ui.newLine();
 
     // Prompt for API key

@@ -30,7 +30,7 @@ export class UIManager {
       margin: 1,
       borderStyle: 'round',
       borderColor: 'cyan'
-    }));
+    }) + '\n');
   }
 
   /**
@@ -38,7 +38,7 @@ export class UIManager {
    * @param message Success message to display
    */
   showSuccess(message: string): void {
-    console.log('\n' + this.colors.success('✨ ' + message) + '\n');
+    console.log('\n' + this.colors.success('✨ ' + message) + '\n\n');
   }
 
   /**
@@ -51,7 +51,7 @@ export class UIManager {
     if (details) {
       console.log(this.colors.muted('   ' + details));
     }
-    console.log();
+    console.log('\n');
   }
 
   /**
@@ -61,7 +61,7 @@ export class UIManager {
    */
   showErrorWithSuggestion(message: string, suggestion: string): void {
     console.log('\n' + this.colors.error('❌ Error: ' + message));
-    console.log(this.colors.info('💡 Suggestion: ' + suggestion) + '\n');
+    console.log(this.colors.info('💡 Suggestion: ' + suggestion) + '\n\n');
   }
 
   /**
@@ -69,7 +69,7 @@ export class UIManager {
    * @param message Info message to display
    */
   showInfo(message: string): void {
-    console.log('\n' + this.colors.info('💡 ' + message) + '\n');
+    console.log('\n' + this.colors.info('💡 ' + message) + '\n\n');
   }
 
   /**
@@ -77,7 +77,7 @@ export class UIManager {
    * @param message Warning message to display
    */
   showWarning(message: string): void {
-    console.log('\n' + this.colors.warning('⚠️  ' + message) + '\n');
+    console.log('\n' + this.colors.warning('⚠️  ' + message) + '\n\n');
   }
 
   /**
@@ -99,7 +99,8 @@ export class UIManager {
    */
   showSectionHeader(title: string): void {
     console.log('\n' + this.colors.primary.bold(title));
-    console.log(this.colors.muted('─'.repeat(title.length)));
+    console.log(this.colors.muted('─'.repeat(Math.max(title.length, 50))));
+    console.log();
   }
 
   /**
@@ -120,6 +121,7 @@ export class UIManager {
         }
       });
     }
+    console.log();
   }
 
   /**
@@ -133,6 +135,69 @@ export class UIManager {
    * Display a blank line
    */
   newLine(): void {
+    console.log();
+  }
+
+  /**
+   * Display repository information banner
+   * @param repoName Repository name
+   * @param branch Current branch
+   * @param repoPath Repository path
+   */
+  showRepositoryInfo(repoName: string, branch: string, repoPath: string): void {
+    console.log();
+    console.log(this.colors.primary.bold('📦 Repository Information'));
+    console.log(this.colors.muted('─'.repeat(50)));
+    console.log();
+    console.log('   ' + this.colors.primary('📁 Repository: ') + chalk.bold.white(repoName));
+    console.log('   ' + this.colors.primary('🌿 Branch: ') + chalk.bold.green(branch));
+    console.log('   ' + this.colors.muted('📍 Path: ') + this.colors.muted(repoPath));
+    console.log();
+    console.log(this.colors.muted('─'.repeat(50)));
+    console.log();
+  }
+
+  /**
+   * Display change statistics
+   * @param stats Statistics object with files, insertions, deletions
+   */
+  showChangeStats(stats: { filesChanged: number; insertions: number; deletions: number }): void {
+    const { filesChanged, insertions, deletions } = stats;
+    
+    console.log();
+    console.log(this.colors.primary.bold('📊 Changes Summary'));
+    console.log(this.colors.muted('─'.repeat(50)));
+    console.log();
+    
+    const fileText = filesChanged === 1 ? 'file' : 'files';
+    console.log(`   ${chalk.bold.white(filesChanged)} ${fileText} changed`);
+    
+    if (insertions > 0) {
+      console.log(`   ${chalk.bold.green(`+${insertions}`)} insertions`);
+    }
+    
+    if (deletions > 0) {
+      console.log(`   ${chalk.bold.red(`-${deletions}`)} deletions`);
+    }
+    
+    const totalChanges = insertions + deletions;
+    if (totalChanges > 0) {
+      console.log(`   ${chalk.bold.cyan(`Total: ${totalChanges} lines`)} changed`);
+    }
+    
+    console.log();
+    console.log(this.colors.muted('─'.repeat(50)));
+    console.log();
+  }
+
+  /**
+   * Display AI generation info
+   * @param model Model name being used
+   * @param suggestionCount Number of suggestions generated
+   */
+  showAIGenerationInfo(model: string, suggestionCount: number): void {
+    console.log(this.colors.muted(`   🤖 Model: ${chalk.cyan.bold(model)}`));
+    console.log(this.colors.muted(`   📝 Generating ${chalk.cyan.bold(suggestionCount)} commit message suggestions...`));
     console.log();
   }
 
@@ -206,6 +271,28 @@ export class UIManager {
     this.showSectionHeader('📝 Select a commit message');
     this.newLine();
 
+    // Show all suggestions with more detail
+    console.log(this.colors.muted('Available suggestions:'));
+    console.log();
+    suggestions.forEach((suggestion, index) => {
+      const lines = suggestion.message.split('\n');
+      const firstLine = lines[0];
+      const hasBody = lines.length > 1;
+      
+      console.log(`   ${this.colors.primary.bold(`${index + 1}.`)} ${this.colors.primary(firstLine)}`);
+      if (hasBody) {
+        lines.slice(1).forEach(line => {
+          if (line.trim()) {
+            console.log(this.colors.muted(`      ${line}`));
+          }
+        });
+        console.log();
+      } else {
+        console.log();
+      }
+    });
+    console.log();
+
     const choices = suggestions.map((suggestion, index) => {
       const lines = suggestion.message.split('\n');
       const firstLine = lines[0];
@@ -241,11 +328,21 @@ export class UIManager {
     // Show preview of selected message if not cancelled
     if (answer.selection !== -1) {
       this.newLine();
-      this.showSectionHeader('Selected commit message:');
+      this.showSectionHeader('✅ Selected commit message');
+      console.log();
       console.log(this.colors.muted('─'.repeat(50)));
-      console.log(this.colors.primary(suggestions[answer.selection].message));
+      console.log();
+      const messageLines = suggestions[answer.selection].message.split('\n');
+      messageLines.forEach(line => {
+        if (line.trim()) {
+          console.log('   ' + this.colors.primary(line));
+        } else {
+          console.log();
+        }
+      });
+      console.log();
       console.log(this.colors.muted('─'.repeat(50)));
-      this.newLine();
+      console.log();
     }
 
     return answer.selection;

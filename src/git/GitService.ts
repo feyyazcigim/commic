@@ -168,4 +168,57 @@ export class GitService {
       throw GitRepositoryError.commitFailed((error as Error).message);
     }
   }
+
+  /**
+   * Get current branch name
+   * @param repoPath Path to repository root
+   * @returns Current branch name
+   */
+  async getCurrentBranch(repoPath: string): Promise<string> {
+    try {
+      const git: SimpleGit = simpleGit(repoPath);
+      const branch = await git.revparse(['--abbrev-ref', 'HEAD']);
+      return branch.trim();
+    } catch (error) {
+      return 'unknown';
+    }
+  }
+
+  /**
+   * Get repository name from path
+   * @param repoPath Path to repository root
+   * @returns Repository name (last directory in path)
+   */
+  getRepositoryName(repoPath: string): string {
+    const parts = repoPath.split('/').filter(p => p.length > 0);
+    return parts[parts.length - 1] || 'unknown';
+  }
+
+  /**
+   * Get diff statistics (files changed, insertions, deletions)
+   * @param repoPath Path to repository root
+   * @returns Statistics object
+   */
+  async getDiffStats(repoPath: string): Promise<{
+    filesChanged: number;
+    insertions: number;
+    deletions: number;
+  }> {
+    try {
+      const git: SimpleGit = simpleGit(repoPath);
+      const diffSummary = await git.diffSummary();
+      
+      return {
+        filesChanged: diffSummary.files.length,
+        insertions: diffSummary.insertions,
+        deletions: diffSummary.deletions
+      };
+    } catch (error) {
+      return {
+        filesChanged: 0,
+        insertions: 0,
+        deletions: 0
+      };
+    }
+  }
 }

@@ -56,8 +56,16 @@ export class MainOrchestrator {
         suggestions[selectedIndex].message
       );
 
-      // Step 8: Show success
-      this.uiManager.showSuccess(`Committed successfully! ${this.uiManager['colors'].muted(`(${commitHash.substring(0, 7)})`)}`);
+      // Step 8: Show success with more details
+      const shortHash = commitHash.substring(0, 7);
+      const repoName = this.gitService.getRepositoryName(repository.rootPath);
+      const branch = await this.gitService.getCurrentBranch(repository.rootPath);
+      this.uiManager.showSuccess(
+        `Committed successfully!\n` +
+        `   Repository: ${repoName}\n` +
+        `   Branch: ${branch}\n` +
+        `   Commit: ${this.uiManager['colors'].muted(shortHash)}`
+      );
     } catch (error) {
       this.handleError(error);
       process.exit(1);
@@ -120,7 +128,16 @@ export class MainOrchestrator {
         throw GitRepositoryError.noCommitsFound();
       }
 
-      spinner.succeed(`Found repository at: ${repository.rootPath}`);
+      // Get repository info
+      const repoName = this.gitService.getRepositoryName(repository.rootPath);
+      const branch = await this.gitService.getCurrentBranch(repository.rootPath);
+
+      spinner.succeed('Repository found');
+      
+      // Show repository info with better spacing
+      this.uiManager.newLine();
+      this.uiManager.showRepositoryInfo(repoName, branch, repository.rootPath);
+
       return repository;
     } catch (error) {
       spinner.fail('Failed to find repository');
@@ -143,8 +160,14 @@ export class MainOrchestrator {
         spinner.fail('No changes to commit');
         throw GitRepositoryError.noChanges();
       }
+
+      // Get diff statistics
+      const stats = await this.gitService.getDiffStats(repoPath);
       
-      spinner.succeed(`Found changes (${diff.staged ? 'staged' : ''}${diff.staged && diff.unstaged ? ' + ' : ''}${diff.unstaged ? 'unstaged' : ''})`);
+      spinner.succeed('Changes analyzed');
+      
+      // Show change statistics with better spacing
+      this.uiManager.showChangeStats(stats);
       
       return diff;
     } catch (error) {
@@ -160,17 +183,22 @@ export class MainOrchestrator {
    * @returns Array of suggestions
    */
   private async generateSuggestions(config: Config, diff: any) {
-    const spinner = this.uiManager.showLoading('Generating commit messages with AI...');
+    this.uiManager.newLine();
+    this.uiManager.showSectionHeader('🤖 AI Generation');
+    this.uiManager.showAIGenerationInfo(config.model, 4);
+    
+    const spinner = this.uiManager.showLoading('   Generating commit messages...');
 
     try {
       const aiService = new AIService(config.apiKey, config.model);
       const suggestions = await aiService.generateCommitMessages(diff, 4);
       
-      spinner.succeed(`Generated ${suggestions.length} commit message suggestions`);
+      spinner.succeed(`   Generated ${suggestions.length} suggestions`);
+      this.uiManager.newLine();
       
       return suggestions;
     } catch (error) {
-      spinner.fail('Failed to generate suggestions');
+      spinner.fail('   Failed to generate suggestions');
       throw error;
     }
   }
@@ -182,10 +210,12 @@ export class MainOrchestrator {
    */
   private async stageChangesIfNeeded(repoPath: string, diff: any): Promise<void> {
     if (diff.unstaged && diff.unstaged.length > 0) {
+      this.uiManager.newLine();
       const spinner = this.uiManager.showLoading('Staging changes...');
       try {
         await this.gitService.stageAll(repoPath);
         spinner.succeed('Changes staged');
+        this.uiManager.newLine();
       } catch (error) {
         spinner.fail('Failed to stage changes');
         throw error;
@@ -200,11 +230,13 @@ export class MainOrchestrator {
    * @returns Commit hash
    */
   private async executeCommit(repoPath: string, message: string): Promise<string> {
-    const spinner = this.uiManager.showLoading('Committing...');
+    this.uiManager.newLine();
+    const spinner = this.uiManager.showLoading('Committing changes...');
 
     try {
       const commitHash = await this.gitService.commit(repoPath, message);
-      spinner.succeed('Commit created');
+      spinner.succeed('Commit created successfully');
+      this.uiManager.newLine();
       return commitHash;
     } catch (error) {
       spinner.fail('Commit failed');
