@@ -1,6 +1,6 @@
-import { GoogleGenerativeAI, type GenerativeModel } from '@google/generative-ai';
-import type { GitDiff, CommitSuggestion } from '../types/index.js';
+import { type GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
 import { APIError, ValidationError } from '../errors/CustomErrors.js';
+import type { CommitSuggestion, GitDiff } from '../types/index.js';
 import { ConventionalCommitsValidator } from '../validation/ConventionalCommitsValidator.js';
 
 /**
@@ -23,17 +23,17 @@ export class AIService {
    */
   private buildPrompt(diff: GitDiff, count: number): string {
     // Combine staged and unstaged diffs
-    const combinedDiff = [diff.staged, diff.unstaged]
-      .filter(d => d.length > 0)
-      .join('\n\n');
+    const combinedDiff = [diff.staged, diff.unstaged].filter((d) => d.length > 0).join('\n\n');
 
     // Truncate diff if too large (Gemini input token limit: 1,048,576 tokens)
     // Using ~800K characters (approx 200K-266K tokens) leaves plenty of room for prompt
     // 1 token ≈ 3-4 characters on average, so 800K chars ≈ 200K-266K tokens
     const maxDiffLength = 800000;
-    const truncatedDiff = combinedDiff.length > maxDiffLength
-      ? combinedDiff.substring(0, maxDiffLength) + '\n\n[... diff truncated due to size limit ...]'
-      : combinedDiff;
+    const truncatedDiff =
+      combinedDiff.length > maxDiffLength
+        ? combinedDiff.substring(0, maxDiffLength) +
+          '\n\n[... diff truncated due to size limit ...]'
+        : combinedDiff;
 
     return `You are an expert Git commit message writer. Analyze the ENTIRE Git diff below and generate ${count} commit messages that summarize ALL changes together. Each commit message should cover the complete set of changes, not individual features.
 
@@ -93,25 +93,28 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
     // Strategy 1: Split by "---" on its own line
     const tripleDashPattern = /\n---\n/g;
     if (tripleDashPattern.test(response)) {
-      messages = response.split(tripleDashPattern)
-        .map(msg => msg.trim())
-        .filter(msg => msg.length > 0);
+      messages = response
+        .split(tripleDashPattern)
+        .map((msg) => msg.trim())
+        .filter((msg) => msg.length > 0);
     }
 
     // Strategy 2: Split by "---" anywhere
     if (messages.length === 0 || messages.length === 1) {
-      messages = response.split('---')
-        .map(msg => msg.trim())
-        .filter(msg => msg.length > 0);
+      messages = response
+        .split('---')
+        .map((msg) => msg.trim())
+        .filter((msg) => msg.length > 0);
     }
 
     // Strategy 3: Split by numbered items (1., 2., etc.)
     if (messages.length === 0 || messages.length === 1) {
       const numberedPattern = /^\d+\.\s+/gm;
       if (numberedPattern.test(response)) {
-        messages = response.split(numberedPattern)
-          .map(msg => msg.trim())
-          .filter(msg => msg.length > 0 && !/^\d+\./.test(msg));
+        messages = response
+          .split(numberedPattern)
+          .map((msg) => msg.trim())
+          .filter((msg) => msg.length > 0 && !/^\d+\./.test(msg));
       }
     }
 
@@ -122,21 +125,26 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
         const parts = response.split(doubleNewlinePattern);
         // Filter out parts that look like commit messages (start with type:)
         messages = parts
-          .map(msg => msg.trim())
-          .filter(msg => {
+          .map((msg) => msg.trim())
+          .filter((msg) => {
             const trimmed = msg.trim();
-            return trimmed.length > 0 && 
-                   /^(feat|fix|docs|style|refactor|test|chore|perf|ci|build)(\([^)]+\))?(!)?:\s/.test(trimmed);
+            return (
+              trimmed.length > 0 &&
+              /^(feat|fix|docs|style|refactor|test|chore|perf|ci|build)(\([^)]+\))?(!)?:\s/.test(
+                trimmed
+              )
+            );
           });
       }
     }
 
     // Strategy 5: Try to extract commit messages by pattern matching
     if (messages.length === 0) {
-      const commitPattern = /(feat|fix|docs|style|refactor|test|chore|perf|ci|build)(\([^)]+\))?(!)?:\s[^\n]+(?:\n(?!---|\d+\.)[^\n]+)*/g;
+      const commitPattern =
+        /(feat|fix|docs|style|refactor|test|chore|perf|ci|build)(\([^)]+\))?(!)?:\s[^\n]+(?:\n(?!---|\d+\.)[^\n]+)*/g;
       const matches = response.match(commitPattern);
       if (matches) {
-        messages = matches.map(msg => msg.trim());
+        messages = matches.map((msg) => msg.trim());
       }
     }
 
@@ -148,13 +156,17 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
 
       for (const line of lines) {
         const trimmed = line.trim();
-        if (/^(feat|fix|docs|style|refactor|test|chore|perf|ci|build)(\([^)]+\))?(!)?:\s/.test(trimmed)) {
+        if (
+          /^(feat|fix|docs|style|refactor|test|chore|perf|ci|build)(\([^)]+\))?(!)?:\s/.test(
+            trimmed
+          )
+        ) {
           if (currentMessage) {
             validTypeLines.push(currentMessage.trim());
           }
           currentMessage = trimmed;
         } else if (currentMessage && trimmed.length > 0) {
-          currentMessage += '\n' + trimmed;
+          currentMessage += `\n${trimmed}`;
         } else if (currentMessage && trimmed.length === 0) {
           // Blank line - continue building message
           currentMessage += '\n';
@@ -168,22 +180,24 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
 
     // Clean up messages - remove any that are clearly not commit messages
     messages = messages
-      .map(msg => {
+      .map((msg) => {
         // Remove common prefixes AI might add
         return msg
           .replace(/^(Here are|Here's|Generated|Commit messages?):?\s*/i, '')
           .replace(/^[-*•]\s*/, '')
           .trim();
       })
-      .filter(msg => {
+      .filter((msg) => {
         // Must start with a valid commit type
-        return msg.length > 0 && 
-               /^(feat|fix|docs|style|refactor|test|chore|perf|ci|build)(\([^)]+\))?(!)?:\s/.test(msg);
+        return (
+          msg.length > 0 &&
+          /^(feat|fix|docs|style|refactor|test|chore|perf|ci|build)(\([^)]+\))?(!)?:\s/.test(msg)
+        );
       });
 
-    return messages.map(message => ({
+    return messages.map((message) => ({
       message: message.trim(),
-      type: ConventionalCommitsValidator.isSingleLine(message) ? 'single-line' : 'multi-line'
+      type: ConventionalCommitsValidator.isSingleLine(message) ? 'single-line' : 'multi-line',
     }));
   }
 
@@ -217,7 +231,7 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
     }
 
     // At least 1 should be single-line (relaxed from 2)
-    const singleLineCount = suggestions.filter(s => s.type === 'single-line').length;
+    const singleLineCount = suggestions.filter((s) => s.type === 'single-line').length;
     if (singleLineCount < 1) {
       return false;
     }
@@ -249,14 +263,11 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
         const prompt = this.buildPrompt(diff, requestCount);
 
         // Call Gemini API with timeout
-        const timeoutPromise = new Promise<never>((_, reject) => 
+        const timeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('Request timeout')), 30000)
         );
-        
-        const result = await Promise.race([
-          this.model.generateContent(prompt),
-          timeoutPromise
-        ]);
+
+        const result = await Promise.race([this.model.generateContent(prompt), timeoutPromise]);
 
         const response = result.response;
         const text = response.text();
@@ -312,7 +323,11 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
           throw APIError.rateLimitExceeded();
         }
 
-        if (errorMessage.includes('api key') || errorMessage.includes('auth') || errorMessage.includes('permission')) {
+        if (
+          errorMessage.includes('api key') ||
+          errorMessage.includes('auth') ||
+          errorMessage.includes('permission')
+        ) {
           throw APIError.authenticationFailed();
         }
 
@@ -326,7 +341,6 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
 
         // For other errors, continue retrying
         if (attempts < maxAttempts) {
-          continue;
         }
       }
     }
@@ -340,10 +354,12 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
     if (bestSuggestions.length === 0) {
       const fallbackMessage = this.generateFallbackMessage(diff);
       if (fallbackMessage) {
-        return [{
-          message: fallbackMessage,
-          type: 'single-line'
-        }];
+        return [
+          {
+            message: fallbackMessage,
+            type: 'single-line',
+          },
+        ];
       }
     }
 
@@ -357,13 +373,21 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
    * @returns Simple commit message or null
    */
   private generateFallbackMessage(diff: GitDiff): string | null {
-    const combinedDiff = (diff.staged + '\n' + diff.unstaged).toLowerCase();
-    
+    const combinedDiff = `${diff.staged}\n${diff.unstaged}`.toLowerCase();
+
     // Simple heuristics to determine commit type
     let type = 'chore';
-    if (combinedDiff.includes('fix') || combinedDiff.includes('bug') || combinedDiff.includes('error')) {
+    if (
+      combinedDiff.includes('fix') ||
+      combinedDiff.includes('bug') ||
+      combinedDiff.includes('error')
+    ) {
       type = 'fix';
-    } else if (combinedDiff.includes('feat') || combinedDiff.includes('add') || combinedDiff.includes('new')) {
+    } else if (
+      combinedDiff.includes('feat') ||
+      combinedDiff.includes('add') ||
+      combinedDiff.includes('new')
+    ) {
       type = 'feat';
     } else if (combinedDiff.includes('doc') || combinedDiff.includes('readme')) {
       type = 'docs';
@@ -373,10 +397,14 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
 
     // Try to extract a simple description
     const lines = combinedDiff.split('\n').slice(0, 5);
-    const fileChanges = lines.filter(l => l.startsWith('+++') || l.startsWith('---'));
-    
+    const fileChanges = lines.filter((l) => l.startsWith('+++') || l.startsWith('---'));
+
     if (fileChanges.length > 0) {
-      const firstFile = fileChanges[0].replace(/^[+-]{3}\s+/, '').split('/').pop() || 'files';
+      const firstFile =
+        fileChanges[0]
+          .replace(/^[+-]{3}\s+/, '')
+          .split('/')
+          .pop() || 'files';
       return `${type}: update ${firstFile}`;
     }
 

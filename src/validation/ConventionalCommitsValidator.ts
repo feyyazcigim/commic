@@ -1,4 +1,4 @@
-import type { ValidationResult, ParsedCommitMessage } from '../types/index.js';
+import type { ParsedCommitMessage, ValidationResult } from '../types/index.js';
 
 /**
  * Validates commit messages against the Conventional Commits specification
@@ -15,7 +15,7 @@ export class ConventionalCommitsValidator {
     'chore',
     'perf',
     'ci',
-    'build'
+    'build',
   ];
 
   // Regex pattern for Conventional Commits format
@@ -27,7 +27,7 @@ export class ConventionalCommitsValidator {
    * @returns Array of valid type strings
    */
   static getValidTypes(): string[] {
-    return [...this.VALID_TYPES];
+    return [...ConventionalCommitsValidator.VALID_TYPES];
   }
 
   /**
@@ -48,8 +48,8 @@ export class ConventionalCommitsValidator {
     const subject = lines[0];
 
     // Validate subject line format
-    const match = subject.match(this.COMMIT_PATTERN);
-    
+    const match = subject.match(ConventionalCommitsValidator.COMMIT_PATTERN);
+
     if (!match) {
       errors.push('Subject line must follow format: type(scope)?: description');
       return { valid: false, errors };
@@ -58,8 +58,10 @@ export class ConventionalCommitsValidator {
     const [, type, , breaking, description] = match;
 
     // Validate type
-    if (!this.VALID_TYPES.includes(type)) {
-      errors.push(`Invalid type "${type}". Must be one of: ${this.VALID_TYPES.join(', ')}`);
+    if (!ConventionalCommitsValidator.VALID_TYPES.includes(type)) {
+      errors.push(
+        `Invalid type "${type}". Must be one of: ${ConventionalCommitsValidator.VALID_TYPES.join(', ')}`
+      );
     }
 
     // Validate description
@@ -90,7 +92,7 @@ export class ConventionalCommitsValidator {
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -102,30 +104,26 @@ export class ConventionalCommitsValidator {
   static parseCommitMessage(message: string): ParsedCommitMessage | null {
     const lines = message.split('\n');
     const subject = lines[0];
-    const match = subject.match(this.COMMIT_PATTERN);
+    const match = subject.match(ConventionalCommitsValidator.COMMIT_PATTERN);
 
     if (!match) {
       return null;
     }
 
     const [, type, scopeWithParens, breaking, description] = match;
-    
+
     // Extract scope without parentheses
-    const scope = scopeWithParens 
-      ? scopeWithParens.slice(1, -1) 
-      : undefined;
+    const scope = scopeWithParens ? scopeWithParens.slice(1, -1) : undefined;
 
     // Extract body (everything after the blank line)
-    const body = lines.length > 2 
-      ? lines.slice(2).join('\n').trim() 
-      : undefined;
+    const body = lines.length > 2 ? lines.slice(2).join('\n').trim() : undefined;
 
     return {
       type,
       scope,
       breaking: breaking === '!' || message.includes('BREAKING CHANGE:'),
       description,
-      body
+      body,
     };
   }
 
@@ -135,7 +133,7 @@ export class ConventionalCommitsValidator {
    * @returns true if single-line, false if multi-line
    */
   static isSingleLine(message: string): boolean {
-    const lines = message.split('\n').filter(line => line.trim().length > 0);
+    const lines = message.split('\n').filter((line) => line.trim().length > 0);
     return lines.length === 1;
   }
 }

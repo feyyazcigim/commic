@@ -169,6 +169,138 @@ Configuration is stored at `~/.commic/config.json`:
 - Git installed and configured
 - Google Gemini API key
 
+## Contributing
+
+We welcome contributions from the open-source community! This guide will help you get started.
+
+### Development Setup
+
+1. **Fork and clone the repository**
+   ```bash
+   git clone https://github.com/your-username/commic.git
+   cd commic
+   ```
+
+2. **Install dependencies and set up Git hooks**
+   ```bash
+   npm install
+   ```
+   
+   > **Note**: `npm install` automatically runs the `prepare` script which sets up Git hooks via Husky. If Git hooks don't work after installation, manually run `npm run prepare` to set them up.
+
+3. **Link the package locally for testing**
+   ```bash
+   npm link
+   ```
+
+### Code Quality & Linting
+
+This project uses [Biome](https://biomejs.dev/) for linting and formatting to ensure consistent code quality.
+
+#### Automatic Linting on Commit
+
+We use [Husky](https://typicode.github.io/husky/) to automatically run linting and auto-fix issues before each commit. This ensures all code follows our standards:
+
+- **Pre-commit hook**: Automatically runs `biome check --write --unsafe` before every commit
+- **Auto-fix**: Automatically fixes linting issues that can be auto-fixed
+- **Commit blocked**: If there are unfixable errors, the commit will be blocked
+
+> **Setup**: Git hooks are automatically set up when you run `npm install` (via the `prepare` script). If hooks don't work, run `npm run prepare` manually.
+
+You don't need to do anything special - just commit as normal, and the hook will handle the rest!
+
+#### Manual Linting Commands
+
+You can also run linting manually:
+
+```bash
+# Check for linting issues
+npm run lint
+
+# Auto-fix linting issues
+npm run lint:fix
+
+# Format code only
+npm run format
+```
+
+#### Linting Rules
+
+Our Biome configuration enforces:
+- ✅ **Code formatting**: Consistent indentation, spacing, and line breaks
+- ✅ **Import organization**: Automatic import sorting
+- ✅ **Unused code detection**: Flags unused variables and imports
+- ✅ **Best practices**: Enforces const usage, template literals, and more
+- ⚠️ **TypeScript**: Warns on explicit `any` types
+
+### Making Changes
+
+1. **Create a feature branch**
+   ```bash
+   git checkout -b feat/your-feature-name
+   # or
+   git checkout -b fix/your-bug-fix
+   ```
+
+2. **Make your changes**
+   - Write clean, readable code
+   - Follow existing code patterns
+   - Add comments for complex logic
+
+3. **Test your changes**
+   ```bash
+   npm run build
+   npm run link  # Test locally
+   ```
+
+4. **Commit your changes**
+   ```bash
+   commic .
+   ```
+   
+   The pre-commit hook will automatically:
+   - Format your code
+   - Fix linting issues
+   - Organize imports
+   
+   If there are errors that can't be auto-fixed, fix them manually and try again.
+
+5. **Push and create a Pull Request**
+   ```bash
+   git push origin feat/your-feature-name
+   ```
+
+### Commit Message Guidelines
+
+We follow [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+- `feat:` - New features
+- `fix:` - Bug fixes
+- `docs:` - Documentation changes
+- `style:` - Code style changes (formatting, etc.)
+- `refactor:` - Code refactoring
+- `test:` - Adding or updating tests
+- `chore:` - Maintenance tasks
+- `ci:` - CI/CD changes
+- `build:` - Build system changes
+
+### Pull Request Process
+
+1. Ensure your code passes all linting checks (handled automatically)
+2. Update documentation if needed
+3. Write clear commit messages
+4. Reference any related issues in your PR description
+5. Wait for code review and address feedback
+
+### Questions?
+
+If you have questions or need help, feel free to:
+- Open an issue for discussion
+- Check existing issues and PRs
+- Review the codebase to understand patterns
+
+Thank you for contributing! 🎉
+
 ## License
 
 MIT

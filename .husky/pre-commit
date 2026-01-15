@@ -1,0 +1,2 @@
+# Run Biome check and auto-fix
+npx @biomejs/biome check --write --unsafe --no-errors-on-unmatched .

@@ -1,8 +1,8 @@
-import { promises as fs } from 'fs';
-import { join, dirname } from 'path';
-import { homedir } from 'os';
-import type { Config } from '../types/index.js';
+import { promises as fs } from 'node:fs';
+import { homedir } from 'node:os';
+import { dirname, join } from 'node:path';
 import { ConfigurationError } from '../errors/CustomErrors.js';
+import type { Config } from '../types/index.js';
 import type { UIManager } from '../ui/UIManager.js';
 
 /**
@@ -28,27 +28,27 @@ export class ConfigManager {
     try {
       const configData = await fs.readFile(this.configPath, 'utf-8');
       const config = JSON.parse(configData) as Config;
-      
+
       // Validate config structure
       if (!config.apiKey || !config.model) {
         throw ConfigurationError.configFileCorrupted();
       }
-      
+
       return config;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         // Config file doesn't exist yet - this is fine on first run
         return null;
       }
-      
+
       if (error instanceof SyntaxError) {
         throw ConfigurationError.configFileCorrupted();
       }
-      
+
       if (error instanceof ConfigurationError) {
         throw error;
       }
-      
+
       throw ConfigurationError.configSaveFailed(error as Error);
     }
   }
@@ -63,19 +63,15 @@ export class ConfigManager {
     try {
       // Ensure config directory exists
       await fs.mkdir(this.configDir, { recursive: true });
-      
+
       // Add version to config
       const configWithVersion: Config = {
         ...config,
-        version: ConfigManager.CONFIG_VERSION
+        version: ConfigManager.CONFIG_VERSION,
       };
-      
+
       // Write config file with pretty formatting
-      await fs.writeFile(
-        this.configPath,
-        JSON.stringify(configWithVersion, null, 2),
-        'utf-8'
-      );
+      await fs.writeFile(this.configPath, JSON.stringify(configWithVersion, null, 2), 'utf-8');
     } catch (error) {
       throw ConfigurationError.configSaveFailed(error as Error);
     }
@@ -133,16 +129,13 @@ export class ConfigManager {
     }
 
     // Prompt for model selection
-    const availableModels = [
-      'gemini-2.5-flash',
-      'gemini-flash-latest'
-    ];
+    const availableModels = ['gemini-2.5-flash', 'gemini-flash-latest'];
     const model = await ui.promptForModel(availableModels);
 
     return {
       apiKey,
       model,
-      version: ConfigManager.CONFIG_VERSION
+      version: ConfigManager.CONFIG_VERSION,
     };
   }
 }

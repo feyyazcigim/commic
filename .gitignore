@@ -28,6 +28,9 @@ dist/
 build/
 *.tsbuildinfo
 
+# Husky
+.husky/_/
+
 # IDE
 .kiro/
 .kit/

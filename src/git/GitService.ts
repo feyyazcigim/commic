@@ -1,8 +1,8 @@
-import { simpleGit, type SimpleGit } from 'simple-git';
-import { resolve, join, dirname } from 'path';
-import { promises as fs } from 'fs';
-import type { GitRepository, GitDiff } from '../types/index.js';
+import { promises as fs } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { type SimpleGit, simpleGit } from 'simple-git';
 import { GitRepositoryError } from '../errors/CustomErrors.js';
+import type { GitDiff, GitRepository } from '../types/index.js';
 
 /**
  * Handles all Git operations including repository discovery, diff retrieval, and commits
@@ -33,14 +33,14 @@ export class GitService {
 
       while (currentPath !== root) {
         const gitPath = join(currentPath, '.git');
-        
+
         try {
           const stats = await fs.stat(gitPath);
           if (stats.isDirectory()) {
             // Found .git directory
             return {
               path: resolvedPath,
-              rootPath: currentPath
+              rootPath: currentPath,
             };
           }
         } catch {
@@ -74,7 +74,7 @@ export class GitService {
   private normalizePath(path: string): string {
     // Remove trailing slashes
     let normalized = path.replace(/\/+$/, '');
-    
+
     // Handle empty string (current directory)
     if (normalized === '') {
       normalized = '.';
@@ -94,7 +94,7 @@ export class GitService {
       const git: SimpleGit = simpleGit(repoPath);
       const log = await git.log({ maxCount: 1 });
       return log.total > 0;
-    } catch (error) {
+    } catch (_error) {
       // If git log fails, repository likely has no commits
       return false;
     }
@@ -121,7 +121,7 @@ export class GitService {
       return {
         staged,
         unstaged,
-        hasChanges
+        hasChanges,
       };
     } catch (error) {
       throw new GitRepositoryError(
@@ -159,10 +159,10 @@ export class GitService {
     try {
       const git: SimpleGit = simpleGit(repoPath);
       const result = await git.commit(message);
-      
+
       // Extract commit hash from result
       const commitHash = result.commit || 'unknown';
-      
+
       return commitHash;
     } catch (error) {
       throw GitRepositoryError.commitFailed((error as Error).message);
@@ -179,7 +179,7 @@ export class GitService {
       const git: SimpleGit = simpleGit(repoPath);
       const branch = await git.revparse(['--abbrev-ref', 'HEAD']);
       return branch.trim();
-    } catch (error) {
+    } catch (_error) {
       return 'unknown';
     }
   }
@@ -190,7 +190,7 @@ export class GitService {
    * @returns Repository name (last directory in path)
    */
   getRepositoryName(repoPath: string): string {
-    const parts = repoPath.split('/').filter(p => p.length > 0);
+    const parts = repoPath.split('/').filter((p) => p.length > 0);
     return parts[parts.length - 1] || 'unknown';
   }
 
@@ -207,17 +207,17 @@ export class GitService {
     try {
       const git: SimpleGit = simpleGit(repoPath);
       const diffSummary = await git.diffSummary();
-      
+
       return {
         filesChanged: diffSummary.files.length,
         insertions: diffSummary.insertions,
-        deletions: diffSummary.deletions
+        deletions: diffSummary.deletions,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         filesChanged: 0,
         insertions: 0,
-        deletions: 0
+        deletions: 0,
       };
     }
   }
@@ -232,14 +232,14 @@ export class GitService {
     try {
       const git: SimpleGit = simpleGit(repoPath);
       const remotes = await git.getRemotes(true);
-      const remote = remotes.find(r => r.name === remoteName);
-      
-      if (remote && remote.refs && remote.refs.fetch) {
+      const remote = remotes.find((r) => r.name === remoteName);
+
+      if (remote?.refs?.fetch) {
         return remote.refs.fetch;
       }
-      
+
       return null;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }

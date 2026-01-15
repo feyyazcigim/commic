@@ -3,9 +3,9 @@
 import { Command } from 'commander';
 import { ConfigManager } from './config/ConfigManager.js';
 import { GitService } from './git/GitService.js';
-import { UIManager } from './ui/UIManager.js';
 import { MainOrchestrator } from './orchestrator/MainOrchestrator.js';
 import type { CLIOptions } from './types/index.js';
+import { UIManager } from './ui/UIManager.js';
 
 /**
  * Main entry point for the Commit CLI
@@ -27,21 +27,17 @@ async function main() {
         const uiManager = new UIManager();
 
         // Create orchestrator
-        const orchestrator = new MainOrchestrator(
-          configManager,
-          gitService,
-          uiManager
-        );
+        const orchestrator = new MainOrchestrator(configManager, gitService, uiManager);
 
         // Build CLI options
         const cliOptions: CLIOptions = {
           path,
-          reconfigure: options.reconfigure
+          reconfigure: options.reconfigure,
         };
 
         // Execute workflow
         await orchestrator.execute(cliOptions);
-      } catch (error) {
+      } catch (_error) {
         // Top-level error handler
         // Orchestrator already handles and displays errors
         // This is just to ensure we exit with error code

@@ -1,7 +1,7 @@
-import chalk from 'chalk';
-import ora, { type Ora } from 'ora';
 import boxen from 'boxen';
+import chalk from 'chalk';
 import inquirer from 'inquirer';
+import ora, { type Ora } from 'ora';
 import type { CommitSuggestion } from '../types/index.js';
 
 /**
@@ -15,33 +15,52 @@ export class UIManager {
     error: chalk.red,
     warning: chalk.yellow,
     info: chalk.blue,
-    muted: chalk.gray
+    muted: chalk.gray,
   };
 
   /**
    * Display welcome message with branding
    */
   showWelcome(): void {
-    const welcomeText = 
-      chalk.bold.cyan('Commic') + '\n' +
-      chalk.gray('AI-powered commit messages with Conventional Commits') + '\n\n' +
-      this.colors.muted('✨ Features:') + '\n' +
-      '   • ' + this.colors.primary('Automated commit message generation') + '\n' +
-      '   • ' + this.colors.primary('Conventional Commits specification') + '\n' +
-      '   • ' + this.colors.primary('Multiple AI-generated suggestions') + '\n' +
-      '   • ' + this.colors.primary('Smart diff analysis') + '\n\n' +
-      this.colors.muted('📋 How it works:') + '\n' +
-      '   1. Analyzes your Git changes' + '\n' +
-      '   2. Generates commit message suggestions' + '\n' +
-      '   3. Lets you choose the best one' + '\n' +
+    const welcomeText =
+      chalk.bold.cyan('Commic') +
+      '\n' +
+      chalk.gray('AI-powered commit messages with Conventional Commits') +
+      '\n\n' +
+      this.colors.muted('✨ Features:') +
+      '\n' +
+      '   • ' +
+      this.colors.primary('Automated commit message generation') +
+      '\n' +
+      '   • ' +
+      this.colors.primary('Conventional Commits specification') +
+      '\n' +
+      '   • ' +
+      this.colors.primary('Multiple AI-generated suggestions') +
+      '\n' +
+      '   • ' +
+      this.colors.primary('Smart diff analysis') +
+      '\n\n' +
+      this.colors.muted('📋 How it works:') +
+      '\n' +
+      '   1. Analyzes your Git changes' +
+      '\n' +
+      '   2. Generates commit message suggestions' +
+      '\n' +
+      '   3. Lets you choose the best one' +
+      '\n' +
       '   4. Creates the commit automatically';
-    
-    console.log('\n' + boxen(welcomeText, {
-      padding: 1,
-      margin: 1,
-      borderStyle: 'round',
-      borderColor: 'cyan'
-    }) + '\n');
+
+    console.log(
+      '\n' +
+        boxen(welcomeText, {
+          padding: 1,
+          margin: 1,
+          borderStyle: 'round',
+          borderColor: 'cyan',
+        }) +
+        '\n'
+    );
   }
 
   /**
@@ -49,7 +68,7 @@ export class UIManager {
    * @param message Success message to display
    */
   showSuccess(message: string): void {
-    console.log('\n' + this.colors.success('✨ ' + message) + '\n\n');
+    console.log(`\n${this.colors.success(`✨ ${message}`)}\n\n`);
   }
 
   /**
@@ -58,9 +77,9 @@ export class UIManager {
    * @param details Optional detailed error information
    */
   showError(message: string, details?: string): void {
-    console.log('\n' + this.colors.error('❌ Error: ' + message));
+    console.log(`\n${this.colors.error(`❌ Error: ${message}`)}`);
     if (details) {
-      console.log(this.colors.muted('   ' + details));
+      console.log(this.colors.muted(`   ${details}`));
     }
     console.log('\n');
   }
@@ -71,8 +90,8 @@ export class UIManager {
    * @param suggestion Actionable suggestion for user
    */
   showErrorWithSuggestion(message: string, suggestion: string): void {
-    console.log('\n' + this.colors.error('❌ Error: ' + message));
-    console.log(this.colors.info('💡 Suggestion: ' + suggestion) + '\n\n');
+    console.log(`\n${this.colors.error(`❌ Error: ${message}`)}`);
+    console.log(`${this.colors.info(`💡 Suggestion: ${suggestion}`)}\n\n`);
   }
 
   /**
@@ -80,7 +99,7 @@ export class UIManager {
    * @param message Info message to display
    */
   showInfo(message: string): void {
-    console.log('\n' + this.colors.info('💡 ' + message) + '\n\n');
+    console.log(`\n${this.colors.info(`💡 ${message}`)}\n\n`);
   }
 
   /**
@@ -88,7 +107,16 @@ export class UIManager {
    * @param message Warning message to display
    */
   showWarning(message: string): void {
-    console.log('\n' + this.colors.warning('⚠️  ' + message) + '\n\n');
+    console.log(`\n${this.colors.warning(`⚠️  ${message}`)}\n\n`);
+  }
+
+  /**
+   * Apply muted (gray) color to text
+   * @param text Text to color
+   * @returns Colored text string
+   */
+  muted(text: string): string {
+    return this.colors.muted(text);
   }
 
   /**
@@ -100,7 +128,7 @@ export class UIManager {
     return ora({
       text: message,
       color: 'cyan',
-      spinner: 'dots'
+      spinner: 'dots',
     }).start();
   }
 
@@ -109,7 +137,7 @@ export class UIManager {
    * @param title Section title
    */
   showSectionHeader(title: string): void {
-    console.log('\n' + this.colors.primary.bold(title));
+    console.log(`\n${this.colors.primary.bold(title)}`);
     console.log(this.colors.muted('─'.repeat(Math.max(title.length, 50))));
     console.log();
   }
@@ -122,13 +150,13 @@ export class UIManager {
   showCommitPreview(message: string, index?: number): void {
     const prefix = index !== undefined ? `${index + 1}. ` : '  ';
     const lines = message.split('\n');
-    
+
     console.log(this.colors.muted(prefix) + this.colors.primary(lines[0]));
-    
+
     if (lines.length > 1) {
-      lines.slice(1).forEach(line => {
+      lines.slice(1).forEach((line) => {
         if (line.trim()) {
-          console.log(this.colors.muted('   ' + line));
+          console.log(this.colors.muted(`   ${line}`));
         }
       });
     }
@@ -156,17 +184,22 @@ export class UIManager {
    * @param repoPath Repository path
    * @param remoteUrl Optional remote repository URL
    */
-  showRepositoryInfo(repoName: string, branch: string, repoPath: string, remoteUrl?: string | null): void {
+  showRepositoryInfo(
+    repoName: string,
+    branch: string,
+    repoPath: string,
+    remoteUrl?: string | null
+  ): void {
     console.log();
     console.log(this.colors.primary.bold('📦 Repository Information'));
     console.log(this.colors.muted('─'.repeat(50)));
     console.log();
-    console.log('   ' + this.colors.primary('📁 Repository: ') + chalk.bold.white(repoName));
-    console.log('   ' + this.colors.primary('🌿 Branch: ') + chalk.bold.green(branch));
+    console.log(`   ${this.colors.primary('📁 Repository: ')}${chalk.bold.white(repoName)}`);
+    console.log(`   ${this.colors.primary('🌿 Branch: ')}${chalk.bold.green(branch)}`);
     if (remoteUrl) {
-      console.log('   ' + this.colors.primary('🔗 Remote: ') + this.colors.muted(remoteUrl));
+      console.log(`   ${this.colors.primary('🔗 Remote: ')}${this.colors.muted(remoteUrl)}`);
     }
-    console.log('   ' + this.colors.muted('📍 Path: ') + this.colors.muted(repoPath));
+    console.log(`   ${this.colors.muted('📍 Path: ')}${this.colors.muted(repoPath)}`);
     console.log();
     console.log(this.colors.muted('─'.repeat(50)));
     console.log();
@@ -178,28 +211,28 @@ export class UIManager {
    */
   showChangeStats(stats: { filesChanged: number; insertions: number; deletions: number }): void {
     const { filesChanged, insertions, deletions } = stats;
-    
+
     console.log();
     console.log(this.colors.primary.bold('📊 Changes Summary'));
     console.log(this.colors.muted('─'.repeat(50)));
     console.log();
-    
+
     const fileText = filesChanged === 1 ? 'file' : 'files';
     console.log(`   ${chalk.bold.white(filesChanged)} ${fileText} changed`);
-    
+
     if (insertions > 0) {
       console.log(`   ${chalk.bold.green(`+${insertions}`)} insertions`);
     }
-    
+
     if (deletions > 0) {
       console.log(`   ${chalk.bold.red(`-${deletions}`)} deletions`);
     }
-    
+
     const totalChanges = insertions + deletions;
     if (totalChanges > 0) {
       console.log(`   ${chalk.bold.cyan(`Total: ${totalChanges} lines`)} changed`);
     }
-    
+
     console.log();
     console.log(this.colors.muted('─'.repeat(50)));
     console.log();
@@ -212,7 +245,11 @@ export class UIManager {
    */
   showAIGenerationInfo(model: string, suggestionCount: number): void {
     console.log(this.colors.muted(`   🤖 Model: ${chalk.cyan.bold(model)}`));
-    console.log(this.colors.muted(`   📝 Generating ${chalk.cyan.bold(suggestionCount)} commit message suggestions...`));
+    console.log(
+      this.colors.muted(
+        `   📝 Generating ${chalk.cyan.bold(suggestionCount)} commit message suggestions...`
+      )
+    );
     console.log();
   }
 
@@ -235,10 +272,10 @@ export class UIManager {
             return 'API key seems too short. Please check and try again.';
           }
           return true;
-        }
-      }
+        },
+      },
     ]);
-    
+
     return answer.apiKey.trim();
   }
 
@@ -253,27 +290,27 @@ export class UIManager {
         type: 'list',
         name: 'model',
         message: 'Select Gemini model:',
-        choices: models.map(model => {
+        choices: models.map((model) => {
           if (model === 'gemini-2.5-flash') {
             return {
               name: `${model} ${chalk.gray('(stable)')}`,
-              value: model
+              value: model,
             };
           } else if (model === 'gemini-flash-latest') {
             return {
               name: `${model} ${chalk.gray('(always latest, recommended)')}`,
-              value: model
+              value: model,
             };
           }
           return {
             name: model,
-            value: model
+            value: model,
           };
         }),
-        default: 'gemini-flash-latest'
-      }
+        default: 'gemini-flash-latest',
+      },
     ]);
-    
+
     return answer.model;
   }
 
@@ -293,10 +330,12 @@ export class UIManager {
       const lines = suggestion.message.split('\n');
       const firstLine = lines[0];
       const hasBody = lines.length > 1;
-      
-      console.log(`   ${this.colors.primary.bold(`${index + 1}.`)} ${this.colors.primary(firstLine)}`);
+
+      console.log(
+        `   ${this.colors.primary.bold(`${index + 1}.`)} ${this.colors.primary(firstLine)}`
+      );
       if (hasBody) {
-        lines.slice(1).forEach(line => {
+        lines.slice(1).forEach((line) => {
           if (line.trim()) {
             console.log(this.colors.muted(`      ${line}`));
           }
@@ -312,21 +351,19 @@ export class UIManager {
       const lines = suggestion.message.split('\n');
       const firstLine = lines[0];
       const hasBody = lines.length > 1;
-      
+
       return {
-        name: hasBody 
-          ? `${firstLine} ${chalk.gray('(multi-line)')}`
-          : firstLine,
+        name: hasBody ? `${firstLine} ${chalk.gray('(multi-line)')}` : firstLine,
         value: index,
-        short: firstLine
+        short: firstLine,
       };
     });
 
     // Add cancel option
     choices.push({
-      name: chalk.red('✖ Cancel (don\'t commit)'),
+      name: chalk.red("✖ Cancel (don't commit)"),
       value: -1,
-      short: 'Cancelled'
+      short: 'Cancelled',
     });
 
     const answer = await inquirer.prompt([
@@ -336,8 +373,8 @@ export class UIManager {
         message: 'Choose a commit message:',
         choices,
         pageSize: 10,
-        loop: false
-      }
+        loop: false,
+      },
     ]);
 
     // Show preview of selected message if not cancelled
@@ -348,9 +385,9 @@ export class UIManager {
       console.log(this.colors.muted('─'.repeat(50)));
       console.log();
       const messageLines = suggestions[answer.selection].message.split('\n');
-      messageLines.forEach(line => {
+      messageLines.forEach((line) => {
         if (line.trim()) {
-          console.log('   ' + this.colors.primary(line));
+          console.log(`   ${this.colors.primary(line)}`);
         } else {
           console.log();
         }
@@ -374,10 +411,10 @@ export class UIManager {
         type: 'confirm',
         name: 'confirmed',
         message,
-        default: true
-      }
+        default: true,
+      },
     ]);
-    
+
     return answer.confirmed;
   }
 }

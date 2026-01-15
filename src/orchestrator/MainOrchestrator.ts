@@ -1,9 +1,9 @@
-import type { CLIOptions, Config } from '../types/index.js';
-import { ConfigManager } from '../config/ConfigManager.js';
-import { GitService } from '../git/GitService.js';
 import { AIService } from '../ai/AIService.js';
-import { UIManager } from '../ui/UIManager.js';
-import { GitRepositoryError, ConfigurationError, APIError } from '../errors/CustomErrors.js';
+import type { ConfigManager } from '../config/ConfigManager.js';
+import { APIError, ConfigurationError, GitRepositoryError } from '../errors/CustomErrors.js';
+import type { GitService } from '../git/GitService.js';
+import type { CLIOptions, Config } from '../types/index.js';
+import type { UIManager } from '../ui/UIManager.js';
 
 /**
  * Orchestrates the complete workflow of the Commit CLI
@@ -62,9 +62,9 @@ export class MainOrchestrator {
       const branch = await this.gitService.getCurrentBranch(repository.rootPath);
       this.uiManager.showSuccess(
         `Committed successfully!\n` +
-        `   Repository: ${repoName}\n` +
-        `   Branch: ${branch}\n` +
-        `   Commit: ${this.uiManager['colors'].muted(shortHash)}`
+          `   Repository: ${repoName}\n` +
+          `   Branch: ${branch}\n` +
+          `   Commit: ${this.uiManager.muted(shortHash)}`
       );
     } catch (error) {
       this.handleError(error);
@@ -119,10 +119,10 @@ export class MainOrchestrator {
 
     try {
       const repository = await this.gitService.findRepository(path);
-      
+
       // Check if repository has commits
       const hasCommits = await this.gitService.hasCommits(repository.rootPath);
-      
+
       if (!hasCommits) {
         spinner.fail('Repository has no commits');
         throw GitRepositoryError.noCommitsFound();
@@ -134,7 +134,7 @@ export class MainOrchestrator {
       const remoteUrl = await this.gitService.getRemoteUrl(repository.rootPath);
 
       spinner.succeed('Repository found');
-      
+
       // Show repository info with better spacing
       this.uiManager.newLine();
       this.uiManager.showRepositoryInfo(repoName, branch, repository.rootPath, remoteUrl);
@@ -164,12 +164,12 @@ export class MainOrchestrator {
 
       // Get diff statistics
       const stats = await this.gitService.getDiffStats(repoPath);
-      
+
       spinner.succeed('Changes analyzed');
-      
+
       // Show change statistics with better spacing
       this.uiManager.showChangeStats(stats);
-      
+
       return diff;
     } catch (error) {
       spinner.fail('Failed to analyze changes');
@@ -187,16 +187,16 @@ export class MainOrchestrator {
     this.uiManager.newLine();
     this.uiManager.showSectionHeader('🤖 AI Generation');
     this.uiManager.showAIGenerationInfo(config.model, 4);
-    
+
     const spinner = this.uiManager.showLoading('   Generating commit messages...');
 
     try {
       const aiService = new AIService(config.apiKey, config.model);
       const suggestions = await aiService.generateCommitMessages(diff, 4);
-      
+
       spinner.succeed(`   Generated ${suggestions.length} suggestions`);
       this.uiManager.newLine();
-      
+
       return suggestions;
     } catch (error) {
       spinner.fail('   Failed to generate suggestions');
@@ -250,15 +250,14 @@ export class MainOrchestrator {
    * @param error Error to handle
    */
   private handleError(error: unknown): void {
-    if (error instanceof GitRepositoryError || 
-        error instanceof ConfigurationError || 
-        error instanceof APIError) {
+    if (
+      error instanceof GitRepositoryError ||
+      error instanceof ConfigurationError ||
+      error instanceof APIError
+    ) {
       this.uiManager.showErrorWithSuggestion(error.message, error.suggestion || '');
     } else {
-      this.uiManager.showError(
-        'An unexpected error occurred',
-        (error as Error).message
-      );
+      this.uiManager.showError('An unexpected error occurred', (error as Error).message);
     }
   }
 }

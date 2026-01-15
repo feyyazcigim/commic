@@ -10,7 +10,11 @@
   "scripts": {
     "build": "tsc",
     "start": "npm run build && node dist/index.js",
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "prepare": "husky",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write --unsafe .",
+    "format": "biome format --write ."
   },
   "keywords": [
     "git",
@@ -24,18 +28,20 @@
   "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
-    "simple-git": "^3.27.0",
-    "inquirer": "^12.2.0",
-    "chalk": "^5.4.1",
-    "ora": "^8.1.1",
     "boxen": "^8.0.1",
-    "commander": "^12.1.0"
+    "chalk": "^5.4.1",
+    "commander": "^12.1.0",
+    "inquirer": "^12.2.0",
+    "ora": "^8.1.1",
+    "simple-git": "^3.27.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.5",
+    "@biomejs/biome": "^2.3.11",
     "@types/inquirer": "^9.0.7",
-    "typescript": "^5.7.3",
-    "tsx": "^4.19.2"
+    "@types/node": "^22.10.5",
+    "husky": "^9.1.7",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
   },
   "engines": {
     "node": ">=18.0.0"

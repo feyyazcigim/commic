@@ -18,7 +18,10 @@ class CommitCLIError extends Error {
  * Thrown when Git operations fail or repository is invalid
  */
 export class GitRepositoryError extends CommitCLIError {
-  constructor(message: string, suggestion: string = 'Ensure you are in a valid Git repository or provide a correct path.') {
+  constructor(
+    message: string,
+    suggestion: string = 'Ensure you are in a valid Git repository or provide a correct path.'
+  ) {
     super(message, suggestion);
   }
 
@@ -63,7 +66,10 @@ export class GitRepositoryError extends CommitCLIError {
  * Thrown when config file operations fail or configuration is invalid
  */
 export class ConfigurationError extends CommitCLIError {
-  constructor(message: string, suggestion: string = 'Try reconfiguring with the --reconfigure flag.') {
+  constructor(
+    message: string,
+    suggestion: string = 'Try reconfiguring with the --reconfigure flag.'
+  ) {
     super(message, suggestion);
   }
 
@@ -101,7 +107,10 @@ export class ConfigurationError extends CommitCLIError {
  * Thrown when API requests fail or return invalid responses
  */
 export class APIError extends CommitCLIError {
-  constructor(message: string, suggestion: string = 'Check your internet connection and try again.') {
+  constructor(
+    message: string,
+    suggestion: string = 'Check your internet connection and try again.'
+  ) {
     super(message, suggestion);
   }
 
@@ -134,10 +143,7 @@ export class APIError extends CommitCLIError {
   }
 
   static timeout(): APIError {
-    return new APIError(
-      'API request timed out',
-      'Check your internet connection and try again.'
-    );
+    return new APIError('API request timed out', 'Check your internet connection and try again.');
   }
 }
 
@@ -146,7 +152,10 @@ export class APIError extends CommitCLIError {
  * Thrown when generated messages don't meet Conventional Commits specification
  */
 export class ValidationError extends CommitCLIError {
-  constructor(message: string, suggestion: string = 'This is likely an internal error. Please try again.') {
+  constructor(
+    message: string,
+    suggestion: string = 'This is likely an internal error. Please try again.'
+  ) {
     super(message, suggestion);
   }
 
