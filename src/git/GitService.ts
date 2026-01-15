@@ -221,4 +221,26 @@ export class GitService {
       };
     }
   }
+
+  /**
+   * Get remote repository URL
+   * @param repoPath Path to repository root
+   * @param remoteName Remote name (default: 'origin')
+   * @returns Remote URL or null if no remote configured
+   */
+  async getRemoteUrl(repoPath: string, remoteName: string = 'origin'): Promise<string | null> {
+    try {
+      const git: SimpleGit = simpleGit(repoPath);
+      const remotes = await git.getRemotes(true);
+      const remote = remotes.find(r => r.name === remoteName);
+      
+      if (remote && remote.refs && remote.refs.fetch) {
+        return remote.refs.fetch;
+      }
+      
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
 }

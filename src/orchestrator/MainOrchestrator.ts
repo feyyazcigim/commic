@@ -131,12 +131,13 @@ export class MainOrchestrator {
       // Get repository info
       const repoName = this.gitService.getRepositoryName(repository.rootPath);
       const branch = await this.gitService.getCurrentBranch(repository.rootPath);
+      const remoteUrl = await this.gitService.getRemoteUrl(repository.rootPath);
 
       spinner.succeed('Repository found');
       
       // Show repository info with better spacing
       this.uiManager.newLine();
-      this.uiManager.showRepositoryInfo(repoName, branch, repository.rootPath);
+      this.uiManager.showRepositoryInfo(repoName, branch, repository.rootPath, remoteUrl);
 
       return repository;
     } catch (error) {

@@ -22,8 +22,19 @@ export class UIManager {
    * Display welcome message with branding
    */
   showWelcome(): void {
-    const welcomeText = chalk.bold.cyan('Commic') + '\n' +
-      chalk.gray('AI-powered commit messages with Conventional Commits');
+    const welcomeText = 
+      chalk.bold.cyan('Commic') + '\n' +
+      chalk.gray('AI-powered commit messages with Conventional Commits') + '\n\n' +
+      this.colors.muted('✨ Features:') + '\n' +
+      '   • ' + this.colors.primary('Automated commit message generation') + '\n' +
+      '   • ' + this.colors.primary('Conventional Commits specification') + '\n' +
+      '   • ' + this.colors.primary('Multiple AI-generated suggestions') + '\n' +
+      '   • ' + this.colors.primary('Smart diff analysis') + '\n\n' +
+      this.colors.muted('📋 How it works:') + '\n' +
+      '   1. Analyzes your Git changes' + '\n' +
+      '   2. Generates commit message suggestions' + '\n' +
+      '   3. Lets you choose the best one' + '\n' +
+      '   4. Creates the commit automatically';
     
     console.log('\n' + boxen(welcomeText, {
       padding: 1,
@@ -143,14 +154,18 @@ export class UIManager {
    * @param repoName Repository name
    * @param branch Current branch
    * @param repoPath Repository path
+   * @param remoteUrl Optional remote repository URL
    */
-  showRepositoryInfo(repoName: string, branch: string, repoPath: string): void {
+  showRepositoryInfo(repoName: string, branch: string, repoPath: string, remoteUrl?: string | null): void {
     console.log();
     console.log(this.colors.primary.bold('📦 Repository Information'));
     console.log(this.colors.muted('─'.repeat(50)));
     console.log();
     console.log('   ' + this.colors.primary('📁 Repository: ') + chalk.bold.white(repoName));
     console.log('   ' + this.colors.primary('🌿 Branch: ') + chalk.bold.green(branch));
+    if (remoteUrl) {
+      console.log('   ' + this.colors.primary('🔗 Remote: ') + this.colors.muted(remoteUrl));
+    }
     console.log('   ' + this.colors.muted('📍 Path: ') + this.colors.muted(repoPath));
     console.log();
     console.log(this.colors.muted('─'.repeat(50)));
