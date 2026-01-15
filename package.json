@@ -1,0 +1,43 @@
+{
+  "name": "commic",
+  "version": "1.0.0",
+  "description": "AI-powered Git commit message generator with Conventional Commits support",
+  "main": "dist/index.js",
+  "bin": {
+    "commic": "./dist/index.js"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "keywords": [
+    "git",
+    "commit",
+    "ai",
+    "gemini",
+    "conventional-commits",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "simple-git": "^3.27.0",
+    "inquirer": "^12.2.0",
+    "chalk": "^5.4.1",
+    "ora": "^8.1.1",
+    "boxen": "^8.0.1",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/inquirer": "^9.0.7",
+    "typescript": "^5.7.3",
+    "tsx": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
