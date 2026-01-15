@@ -173,13 +173,24 @@ export class UIManager {
         type: 'list',
         name: 'model',
         message: 'Select Gemini model:',
-        choices: models.map(model => ({
-          name: model === 'gemini-2.5-flash' 
-            ? `${model} ${chalk.gray('(recommended)')}`
-            : model,
-          value: model
-        })),
-        default: 'gemini-2.5-flash'
+        choices: models.map(model => {
+          if (model === 'gemini-2.5-flash') {
+            return {
+              name: `${model} ${chalk.gray('(stable)')}`,
+              value: model
+            };
+          } else if (model === 'gemini-flash-latest') {
+            return {
+              name: `${model} ${chalk.gray('(always latest, recommended)')}`,
+              value: model
+            };
+          }
+          return {
+            name: model,
+            value: model
+          };
+        }),
+        default: 'gemini-flash-latest'
       }
     ]);
     

@@ -133,7 +133,10 @@ export class ConfigManager {
     }
 
     // Prompt for model selection
-    const availableModels = ['gemini-2.5-flash'];
+    const availableModels = [
+      'gemini-2.5-flash',
+      'gemini-flash-latest'
+    ];
     const model = await ui.promptForModel(availableModels);
 
     return {
