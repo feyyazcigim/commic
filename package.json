@@ -1,6 +1,6 @@
 {
   "name": "commic",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI-powered Git commit message generator with Conventional Commits support",
   "main": "dist/index.js",
   "bin": {
