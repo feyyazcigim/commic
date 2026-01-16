@@ -206,12 +206,23 @@ export class GitService {
   }> {
     try {
       const git: SimpleGit = simpleGit(repoPath);
-      const diffSummary = await git.diffSummary();
+
+      // Get staged changes stats
+      const stagedSummary = await git.diffSummary(['--cached']);
+
+      // Get unstaged changes stats
+      const unstagedSummary = await git.diffSummary();
+
+      // Combine both staged and unstaged stats
+      const allFiles = new Set([
+        ...stagedSummary.files.map((f) => f.file),
+        ...unstagedSummary.files.map((f) => f.file),
+      ]);
 
       return {
-        filesChanged: diffSummary.files.length,
-        insertions: diffSummary.insertions,
-        deletions: diffSummary.deletions,
+        filesChanged: allFiles.size,
+        insertions: stagedSummary.insertions + unstagedSummary.insertions,
+        deletions: stagedSummary.deletions + unstagedSummary.deletions,
       };
     } catch (_error) {
       return {
