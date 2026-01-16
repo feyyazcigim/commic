@@ -1,4 +1,5 @@
 import { type GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
+import { buildCommitPrompt } from '../config/CommitPromptTemplate.js';
 import { APIError, ValidationError } from '../errors/CustomErrors.js';
 import type { CommitSuggestion, GitDiff } from '../types/index.js';
 import { ConventionalCommitsValidator } from '../validation/ConventionalCommitsValidator.js';
@@ -18,63 +19,11 @@ export class AIService {
   /**
    * Build prompt for Gemini API to generate commit messages
    * @param diff Git diff information
-   * @param count Number of suggestions to generate (3-5)
+   * @param customInstruction Optional custom instruction to add to the prompt
    * @returns Formatted prompt string
    */
-  private buildPrompt(diff: GitDiff, count: number): string {
-    // Combine staged and unstaged diffs
-    const combinedDiff = [diff.staged, diff.unstaged].filter((d) => d.length > 0).join('\n\n');
-
-    // Truncate diff if too large (Gemini input token limit: 1,048,576 tokens)
-    // Using ~800K characters (approx 200K-266K tokens) leaves plenty of room for prompt
-    // 1 token ≈ 3-4 characters on average, so 800K chars ≈ 200K-266K tokens
-    const maxDiffLength = 800000;
-    const truncatedDiff =
-      combinedDiff.length > maxDiffLength
-        ? combinedDiff.substring(0, maxDiffLength) +
-          '\n\n[... diff truncated due to size limit ...]'
-        : combinedDiff;
-
-    return `You are an expert Git commit message writer. Analyze the ENTIRE Git diff below and generate ${count} commit messages that summarize ALL changes together. Each commit message should cover the complete set of changes, not individual features.
-
-IMPORTANT: 
-- Analyze ALL changes in the diff as a single commit
-- Each suggested message should describe the complete set of changes
-- Do NOT create separate messages for different parts of the diff
-- Consider all file changes, additions, deletions, and modifications together
-- Provide different perspectives/styles for the SAME set of changes
-
-CRITICAL RULES:
-1. Format: type(scope)?: description
-2. Valid types: feat, fix, docs, style, refactor, test, chore, perf, ci, build
-3. Use imperative mood (add, fix, update - NOT added, fixed, updated)
-4. Description starts with lowercase
-5. Single-line messages: max 72 chars, no body
-6. Multi-line messages: blank line between subject and body
-7. At least 2 messages should be single-line
-8. Each message must summarize ALL changes in the diff
-
-OUTPUT FORMAT:
-Separate each commit message with exactly "---" on its own line.
-Return ONLY the messages, no explanations or numbering.
-
-EXAMPLES (each covers all changes):
-feat(auth): add JWT validation and user login flow
----
-fix: resolve authentication issues and update error handling
----
-refactor(auth): improve JWT implementation and error messages
-
-Update token validation logic and add comprehensive error handling
----
-feat: implement user authentication system
-
-Add JWT token validation, login endpoints, and error handling
-
-GIT DIFF:
-${truncatedDiff}
-
-Generate ${count} commit messages that each describe ALL the changes above:`;
+  private buildPrompt(diff: GitDiff, customInstruction?: string): string {
+    return buildCommitPrompt(diff, customInstruction);
   }
 
   /**
@@ -242,14 +191,12 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
   /**
    * Generate commit message suggestions using Gemini API
    * @param diff Git diff information
-   * @param count Number of suggestions to generate (3-5)
+   * @param customInstruction Optional custom instruction to add to the prompt
    * @returns Array of validated commit suggestions
    * @throws APIError if API request fails
    * @throws ValidationError if no valid suggestions generated
    */
-  async generateCommitMessages(diff: GitDiff, count: number = 4): Promise<CommitSuggestion[]> {
-    // Ensure count is within bounds
-    const requestCount = Math.max(3, Math.min(5, count));
+  async generateCommitMessages(diff: GitDiff, customInstruction?: string): Promise<CommitSuggestion[]> {
 
     let attempts = 0;
     const maxAttempts = 3;
@@ -260,7 +207,7 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
 
       try {
         // Build prompt
-        const prompt = this.buildPrompt(diff, requestCount);
+        const prompt = this.buildPrompt(diff, customInstruction);
 
         // Call Gemini API with timeout
         const timeoutPromise = new Promise<never>((_, reject) =>
@@ -290,13 +237,14 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
         if (validSuggestions.length > 0) {
           // If we meet minimum requirements, return them
           if (this.meetsMinimumRequirements(validSuggestions)) {
-            // Limit to requested count, prioritizing single-line messages
+            // Prioritize single-line messages
             const sorted = validSuggestions.sort((a, b) => {
               if (a.type === 'single-line' && b.type !== 'single-line') return -1;
               if (a.type !== 'single-line' && b.type === 'single-line') return 1;
               return 0;
             });
-            return sorted.slice(0, requestCount);
+            // Return up to 5 suggestions (as per prompt)
+            return sorted.slice(0, 5);
           }
 
           // Store best suggestions so far
@@ -313,7 +261,7 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
 
         // If we have at least 2 valid suggestions, return them even if not perfect
         if (validSuggestions.length >= 2) {
-          return validSuggestions.slice(0, requestCount);
+          return validSuggestions.slice(0, 5);
         }
       } catch (error) {
         const errorMessage = (error as Error).message.toLowerCase();
@@ -347,7 +295,7 @@ Generate ${count} commit messages that each describe ALL the changes above:`;
 
     // If we have some valid suggestions, return them as fallback
     if (bestSuggestions.length >= 1) {
-      return bestSuggestions.slice(0, requestCount);
+      return bestSuggestions.slice(0, 5);
     }
 
     // Last resort: try to generate a simple fallback message

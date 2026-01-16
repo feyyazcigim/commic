@@ -35,7 +35,7 @@ On your first run, Commic will guide you through a quick setup:
    - Get your free API key at [Google AI Studio](https://makersuite.google.com/app/apikey)
    
 2. **Model Selection**: Choose your preferred Gemini model
-   - Currently supports: Gemini 2.5 Flash
+   - Currently supports: Gemini 3 Flash Preview
 
 Your configuration is saved to `~/.commic/config.json` for future use.
 
@@ -72,7 +72,7 @@ commic --reconfigure
 ## How It Works
 
 1. 🔍 **Analyzes** your Git changes (staged and unstaged)
-2. 🤖 **Generates** 3-5 commit message suggestions using AI
+2. 🤖 **Generates** 5 commit message suggestions using AI
 3. 🎯 **Validates** all messages against Conventional Commits spec
 4. ✨ **Presents** an interactive menu for selection
 5. 🚀 **Commits** automatically with your chosen message
@@ -158,7 +158,7 @@ Configuration is stored at `~/.commic/config.json`:
 ```json
 {
   "apiKey": "your-api-key",
-  "model": "gemini-2.5-flash",
+  "model": "gemini-3-flash-preview",
   "version": "1.0.0"
 }
 ```

@@ -241,13 +241,12 @@ export class UIManager {
   /**
    * Display AI generation info
    * @param model Model name being used
-   * @param suggestionCount Number of suggestions generated
    */
-  showAIGenerationInfo(model: string, suggestionCount: number): void {
+  showAIGenerationInfo(model: string): void {
     console.log(this.colors.muted(`   🤖 Model: ${chalk.cyan.bold(model)}`));
     console.log(
       this.colors.muted(
-        `   📝 Generating ${chalk.cyan.bold(suggestionCount)} commit message suggestions...`
+        `   📝 Generating ${chalk.cyan.bold(5)} commit message suggestions...`
       )
     );
     console.log();
@@ -291,7 +290,7 @@ export class UIManager {
         name: 'model',
         message: 'Select Gemini model:',
         choices: models.map((model) => {
-          if (model === 'gemini-2.5-flash') {
+          if (model === 'gemini-3-flash-preview') {
             return {
               name: `${model} ${chalk.gray('(stable)')}`,
               value: model,
@@ -359,6 +358,13 @@ export class UIManager {
       };
     });
 
+    // Add regenerate with prompt option
+    choices.push({
+      name: chalk.cyan('🔄 Regenerate with prompt'),
+      value: -2,
+      short: 'Regenerate',
+    });
+
     // Add cancel option
     choices.push({
       name: chalk.red("✖ Cancel (don't commit)"),
@@ -377,8 +383,8 @@ export class UIManager {
       },
     ]);
 
-    // Show preview of selected message if not cancelled
-    if (answer.selection !== -1) {
+    // Show preview of selected message if not cancelled and not regenerate
+    if (answer.selection !== -1 && answer.selection !== -2) {
       this.newLine();
       this.showSectionHeader('✅ Selected commit message');
       console.log();
@@ -416,5 +422,27 @@ export class UIManager {
     ]);
 
     return answer.confirmed;
+  }
+
+  /**
+   * Prompt user for custom instruction to regenerate commit messages
+   * @returns Custom instruction string or empty string if cancelled
+   */
+  async promptForCustomInstruction(): Promise<string> {
+    const answer = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'instruction',
+        message: 'Enter your instruction for regenerating commit messages:',
+        validate: (input: string) => {
+          if (!input || input.trim().length === 0) {
+            return 'Instruction cannot be empty';
+          }
+          return true;
+        },
+      },
+    ]);
+
+    return answer.instruction.trim();
   }
 }

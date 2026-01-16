@@ -32,14 +32,31 @@ export class MainOrchestrator {
       const repositoryPath = options.path || '.';
       const repository = await this.findAndValidateRepository(repositoryPath);
 
+      // Step 2.5: Stage all changes
+      await this.stageAllChanges(repository.rootPath);
+
       // Step 3: Get Git diff
       const diff = await this.getGitDiff(repository.rootPath);
 
       // Step 4: Generate commit suggestions
-      const suggestions = await this.generateSuggestions(config, diff);
+      let suggestions = await this.generateSuggestions(config, diff);
+      let customInstruction: string | undefined;
 
-      // Step 5: Let user select a commit message
-      const selectedIndex = await this.uiManager.promptForCommitSelection(suggestions);
+      // Step 5: Let user select a commit message (with regenerate option)
+      let selectedIndex = await this.uiManager.promptForCommitSelection(suggestions);
+
+      // Handle regenerate with prompt loop
+      while (selectedIndex === -2) {
+        // Get custom instruction from user
+        customInstruction = await this.uiManager.promptForCustomInstruction();
+
+        // Regenerate suggestions with custom instruction
+        this.uiManager.newLine();
+        suggestions = await this.generateSuggestions(config, diff, customInstruction);
+
+        // Prompt again with new suggestions
+        selectedIndex = await this.uiManager.promptForCommitSelection(suggestions);
+      }
 
       // Handle cancellation
       if (selectedIndex === -1) {
@@ -47,10 +64,7 @@ export class MainOrchestrator {
         return;
       }
 
-      // Step 6: Stage changes if needed
-      await this.stageChangesIfNeeded(repository.rootPath, diff);
-
-      // Step 7: Execute commit
+      // Step 6: Execute commit (changes already staged)
       const commitHash = await this.executeCommit(
         repository.rootPath,
         suggestions[selectedIndex].message
@@ -181,18 +195,19 @@ export class MainOrchestrator {
    * Generate commit message suggestions using AI
    * @param config Configuration with API key
    * @param diff Git diff
+   * @param customInstruction Optional custom instruction for regeneration
    * @returns Array of suggestions
    */
-  private async generateSuggestions(config: Config, diff: any) {
+  private async generateSuggestions(config: Config, diff: any, customInstruction?: string) {
     this.uiManager.newLine();
     this.uiManager.showSectionHeader('🤖 AI Generation');
-    this.uiManager.showAIGenerationInfo(config.model, 4);
+    this.uiManager.showAIGenerationInfo(config.model);
 
     const spinner = this.uiManager.showLoading('   Generating commit messages...');
 
     try {
       const aiService = new AIService(config.apiKey, config.model);
-      const suggestions = await aiService.generateCommitMessages(diff, 4);
+      const suggestions = await aiService.generateCommitMessages(diff, customInstruction);
 
       spinner.succeed(`   Generated ${suggestions.length} suggestions`);
       this.uiManager.newLine();
@@ -205,22 +220,18 @@ export class MainOrchestrator {
   }
 
   /**
-   * Stage changes if there are unstaged changes
+   * Stage all changes in the repository
    * @param repoPath Repository root path
-   * @param diff Git diff
    */
-  private async stageChangesIfNeeded(repoPath: string, diff: any): Promise<void> {
-    if (diff.unstaged && diff.unstaged.length > 0) {
+  private async stageAllChanges(repoPath: string): Promise<void> {
+    const spinner = this.uiManager.showLoading('Staging all changes...');
+    try {
+      await this.gitService.stageAll(repoPath);
+      spinner.succeed('All changes staged');
       this.uiManager.newLine();
-      const spinner = this.uiManager.showLoading('Staging changes...');
-      try {
-        await this.gitService.stageAll(repoPath);
-        spinner.succeed('Changes staged');
-        this.uiManager.newLine();
-      } catch (error) {
-        spinner.fail('Failed to stage changes');
-        throw error;
-      }
+    } catch (error) {
+      spinner.fail('Failed to stage changes');
+      throw error;
     }
   }
 
