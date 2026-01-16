@@ -16,8 +16,7 @@ export function buildCommitPrompt(diff: GitDiff, customInstruction?: string): st
   const maxDiffLength = 800000;
   const truncatedDiff =
     combinedDiff.length > maxDiffLength
-      ? combinedDiff.substring(0, maxDiffLength) +
-        '\n\n[... diff truncated due to size limit ...]'
+      ? `${combinedDiff.substring(0, maxDiffLength)}\n\n[... diff truncated due to size limit ...]`
       : combinedDiff;
 
   return `You are an expert Git commit message writer. Analyze the ENTIRE Git diff below and generate exactly 5 commit messages that summarize ALL changes together. Each commit message should cover the complete set of changes, not individual features.

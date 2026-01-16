@@ -245,9 +245,7 @@ export class UIManager {
   showAIGenerationInfo(model: string): void {
     console.log(this.colors.muted(`   🤖 Model: ${chalk.cyan.bold(model)}`));
     console.log(
-      this.colors.muted(
-        `   📝 Generating ${chalk.cyan.bold(5)} commit message suggestions...`
-      )
+      this.colors.muted(`   📝 Generating ${chalk.cyan.bold(5)} commit message suggestions...`)
     );
     console.log();
   }

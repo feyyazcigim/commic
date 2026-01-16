@@ -206,10 +206,10 @@ export class GitService {
   }> {
     try {
       const git: SimpleGit = simpleGit(repoPath);
-      
+
       // Get staged changes stats
       const stagedSummary = await git.diffSummary(['--cached']);
-      
+
       // Get unstaged changes stats
       const unstagedSummary = await git.diffSummary();
 

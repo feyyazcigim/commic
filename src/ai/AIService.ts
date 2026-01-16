@@ -196,8 +196,10 @@ export class AIService {
    * @throws APIError if API request fails
    * @throws ValidationError if no valid suggestions generated
    */
-  async generateCommitMessages(diff: GitDiff, customInstruction?: string): Promise<CommitSuggestion[]> {
-
+  async generateCommitMessages(
+    diff: GitDiff,
+    customInstruction?: string
+  ): Promise<CommitSuggestion[]> {
     let attempts = 0;
     const maxAttempts = 3;
     let bestSuggestions: CommitSuggestion[] = [];
